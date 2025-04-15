@@ -25,7 +25,6 @@ typedef struct {
 typedef struct {
   int index;
   Token current_token;
-  size_t size;
 } Parser;
 typedef enum {
   AST_NUMBER,
@@ -44,9 +43,9 @@ typedef struct AST {
   struct AST* right;
 } AST;
 Lexer* create_lexer(const char* source, size_t size);
-Parser* create_parser(Token* tokens, size_t size);
-void lexer_step(Lexer* lexer, const char* source, size_t inc);
-AST* main_parse(Parser* parser, Lexer* lexer, Token* tokens, size_t size);
+Parser* create_parser(Token* tokens);
+void lexer_step(Lexer* lexer, const char* source);
+AST* parse_expr(Parser* parser, Token* tokens);
 double interpret_ast(AST* ast);
 void clean_tools(Lexer* lexer, Parser* parser, AST* ast);
 #endif
