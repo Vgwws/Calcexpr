@@ -141,18 +141,6 @@ void lexer_step(Lexer* lexer, const char* source){
   lexer->index++;
   return;
 }
-/*
-  Expr = Term (+|-) Expr | Term
-  Term = Factor (*|/) Term | Factor
-  Factor = Number | Group
-  Number = [0-9]+ ('.' [0-9]*)?
-  Group = '(' Expr ')'
-  2 + 3 * 5 -> +
-              / \
-             2   *
-                / \
-               3   5
-*/
 void advance(Parser* parser, Token* tokens){
   parser->current_token = tokens[++parser->index];
 }
