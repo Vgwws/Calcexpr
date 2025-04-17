@@ -25,7 +25,7 @@ Make a build directory and change directory to it
 mkdir build
 cd build
 ```
-Use CMake to make build files(based on Generator backend you used)
+Use CMake to make build files
 ```sh
 cmake ..
 ```
