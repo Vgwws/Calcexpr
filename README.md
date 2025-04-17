@@ -1,6 +1,6 @@
 # Calcexpr
 ## Short description
-Calculator that take C expression and parse it using Recursive Descent Parsing then interpret the AST
+Text based Calculator that take C expression and parse it using Recursive Descent Parsing then interpret the AST
 ## Grammar
 Logical_OR ::= Logical_AND "||" Logical_OR | Logical_AND
 
@@ -46,3 +46,9 @@ Build it
 ```sh
 make
 ```
+How to use it?
+After installing it, You can execute it
+```sh
+./calcexpr
+```
+If you want to execute it everywhere, you can add the current directory as your PATH or move the binary to one of directory listed in your PATH
