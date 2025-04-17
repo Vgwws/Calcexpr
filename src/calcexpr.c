@@ -190,13 +190,16 @@ AST* parse_group(Parser* parser, Token* tokens){
   }
   return NULL;
 }
-double interpret_ast(AST* ast){
+double interpret_ast(AST* ast, int* error_flag){
+  if(*error_flag){
+    return 0;
+  }
   if(ast->node.type == AST_NUMBER){
     return atof(ast->node.value);
   }
   else{
-    double num1 = interpret_ast(ast->left);
-    double num2 = interpret_ast(ast->right);
+    double num1 = interpret_ast(ast->left, error_flag);
+    double num2 = interpret_ast(ast->right, error_flag);
     switch(ast->node.type){
       case AST_PLUS:
         return num1 + num2;
@@ -205,6 +208,11 @@ double interpret_ast(AST* ast){
       case AST_STAR:
         return num1 * num2;
       case AST_SLASH:
+        if(num2 == 0){
+          fprintf(stderr, "ERROR: Can't divide by zero!\n");
+          *error_flag = 1;
+          return 0;
+        }
         return num1 / num2;
       default:
         return 0;

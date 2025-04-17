@@ -8,20 +8,35 @@ int main(){
   char source[SIZE];
   fgets(source, SIZE, stdin);
   Lexer* lexer = create_lexer(source, SIZE);
+  lexer->token.type = TOKEN_NUMBER;
   Token* tokens = malloc(SIZE * sizeof(Token));
   for(int i = 0; i < SIZE; i++){
     tokens[i].value = calloc(SIZE, sizeof(char));
   }
-  int i = 0;
-  do{
+  for(int i = 0; lexer->token.type != TOKEN_EOF; i++){
     lexer_step(lexer, source);
     tokens[i].type = lexer->token.type;
     strcpy(tokens[i++].value, lexer->token.value);
-  }while(lexer->token.type != TOKEN_EOF);
+  }
+  if(lexer->error_flag){
+    clean_tools(lexer, NULL, NULL);
+    for(int i = 0; i < SIZE; i++){
+      free(tokens[i].value);
+    }
+    free(tokens);
+    return 1;
+  }
   Parser* parser = create_parser(tokens);
   AST* ast = parse_expr(parser, tokens);
-  printf("Result: %lf\n", interpret_ast(ast));
+  int error_flag = 0;
+  double result = interpret_ast(ast, &error_flag);
+  if(!error_flag){
+    printf("Result: %lf\n", result);
+  }
   clean_tools(lexer, parser, ast);
+  for(int i = 0; i < SIZE; i++){
+    free(tokens[i].value);
+  }
   free(tokens);
-  return 0;
+  return error_flag;
 }
