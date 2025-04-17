@@ -42,8 +42,11 @@ void lexer_step(Lexer* lexer, const char* source){
   while(lexer->current_char == ' ' || lexer->current_char == '\t' || lexer->current_char == '\n'){
     lexer->current_char = source[++lexer->index];
   }
-  if(isdigit(lexer->current_char)){
+  if(isdigit(lexer->current_char) || (lexer->current_char == '-' && isdigit(source[lexer->index + 1]))){
     int start = lexer->index;
+    if(lexer->current_char == '-'){
+      lexer->current_char = source[++lexer->index];
+    }
     int dot_count = 0;
     while(isdigit(lexer->current_char) || lexer->current_char == '.'){
       if(lexer->current_char == '.'){
