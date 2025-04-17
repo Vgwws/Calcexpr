@@ -1,6 +1,6 @@
 # Calcexpr
 ## Short description
-Calculator that take C expression and parse it using Recursive Descent Parsing
+Calculator that take C expression and parse it using Recursive Descent Parsing then interpret the AST
 ## Grammar
 Logical_OR ::= Logical_AND "||" Logical_OR | Logical_AND
 
