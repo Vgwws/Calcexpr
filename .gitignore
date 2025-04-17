@@ -1,8 +1,8 @@
 build/
-CMakeCache.txt
 *.exe
 *.cmake
 *.so
 *.o
 *.log
 *.tmp
+main
