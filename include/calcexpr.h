@@ -7,6 +7,13 @@ typedef enum {
   TOKEN_MINUS,
   TOKEN_STAR,
   TOKEN_SLASH,
+  TOKEN_LSHIFT,
+  TOKEN_RSHIFT,
+  TOKEN_LT,
+  TOKEN_LE,
+  TOKEN_EQ,
+  TOKEN_GE,
+  TOKEN_GT,
   TOKEN_LPAREN,
   TOKEN_RPAREN,
   TOKEN_EOF
@@ -31,7 +38,12 @@ typedef enum {
   AST_PLUS,
   AST_MINUS,
   AST_STAR,
-  AST_SLASH
+  AST_SLASH,
+  AST_LT,
+  AST_LE,
+  AST_EQ,
+  AST_GE,
+  AST_GT
 } ASTNodeType;
 typedef struct {
   ASTNodeType type;
@@ -45,7 +57,7 @@ typedef struct AST {
 Lexer* create_lexer(const char* source, size_t size);
 Parser* create_parser(Token* tokens);
 void lexer_step(Lexer* lexer, const char* source);
-AST* parse_expr(Parser* parser, Token* tokens);
+AST* parse_comp(Parser* parser, Token* tokens);
 double interpret_ast(AST* ast, int* error_flag);
 void clean_tools(Lexer* lexer, Parser* parser, AST* ast);
 #endif

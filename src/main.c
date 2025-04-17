@@ -2,32 +2,6 @@
 #include <stdlib.h>
 #include "../include/calcexpr.h"
 #define SIZE 100
-void show_ast(AST* ast, int depth){
-  if(!ast) return;
-  for(int i = 0; i < depth; i++){
-    printf(" ");
-  }
-  printf("|-> ");
-  switch(ast->node.type){
-    case AST_PLUS:
-      printf("+\n");
-      break;
-    case AST_MINUS:
-      printf("-\n");
-      break;
-    case AST_STAR:
-      printf("*\n");
-      break;
-    case AST_SLASH:
-      printf("/\n");
-      break;
-    case AST_NUMBER:
-      printf("%s\n", ast->node.value);
-      break;
-  }
-  show_ast(ast->left, depth + 1);
-  show_ast(ast->right, depth + 1);
-}
 int main(){
   printf("CALCULATOR\n");
   printf("Press `q` to quit program\n");
@@ -54,7 +28,7 @@ int main(){
       continue;
     }
     Parser* parser = create_parser(tokens);
-    AST* ast = parse_expr(parser, tokens);
+    AST* ast = parse_comp(parser, tokens);
     int error_flag = 0;
     double result = interpret_ast(ast, &error_flag);
     if(!error_flag){
