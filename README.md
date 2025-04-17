@@ -1,13 +1,20 @@
 # Calcexpr
-Calculator that take math expression and calculate it
+## Short description
+Calculator that take C expression and parse it using Recursive Descent Parsing
 ## Grammar
-Comp_op ::= "<" | "<=" | "==" | ">" | ">="
-Comp ::= Expr Comp_op Comp | Expr
-Expr ::= Term ("+"|"-") Expr | Term
-Term ::= Factor ("*"|"/") Term | Factor
-Factor ::= Number | Group
+Logical_OR ::= Logical_AND "||" Logical_OR | Logical_AND
+Logical_AND ::= Bitwise_OR "&&" Logical_AND | Bitwise_OR
+Bitwise_OR ::= Bitwise_XOR "|" Bitwise_OR | Bitwise_XOR
+Bitwise_XOR ::= Bitwise_AND "^" Bitwise_XOR | Bitwise_AND
+Bitwise_AND ::= Comp_EQ "&" Bitwise_AND | Comp_EQ
+Comp_EQ ::= Comp_RL ("=="|"!=") Comp_EQ | Comp_RL
+Comp_RL ::= Shift ("<"|"<="|">="|">") Comp_RL | Shift
+Shift ::= Additive ("<<"|">>") Shift | Additive
+Additive ::= Multiplicative ("+"|"-") Additive | Multiplicative
+Multiplicative ::= Primary ("*"|"/") Multiplicative | Primary
+Primary ::= Number | Group
 Number ::= [0-9]+ ("." [0-9]*)?
-Group ::= "(" Expr ")"
+Group ::= "(" Logical_OR ")"
 ## How to install it?
 First clone this repository
 ```sh

@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "../include/calcexpr.h"
 #define SIZE 100
-int main(){
+int main(int argc, char** argv){
   printf("CALCULATOR\n");
   printf("Press `q` to quit program\n");
   Token* tokens = malloc(SIZE * sizeof(Token));
@@ -28,7 +28,7 @@ int main(){
       continue;
     }
     Parser* parser = create_parser(tokens);
-    AST* ast = parse_comp(parser, tokens);
+    AST* ast = main_parse(parser, tokens);
     int error_flag = 0;
     double result = interpret_ast(ast, &error_flag);
     if(!error_flag){

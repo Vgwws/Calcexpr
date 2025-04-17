@@ -10,11 +10,18 @@ void ncopy(Lexer* lexer, const char* source, int start);
 int binop(Token token);
 void advance(Parser* parser, Token* tokens);
 int match(Parser* parser, TokenType type);
-int match_comp(Parser* parser);
-AST* parse_comp(Parser* parser, Token* tokens);
-AST* parse_expr(Parser* parser, Token* tokens);
-AST* parse_term(Parser* parser, Token* tokens);
-AST* parse_factor(Parser* parser, Token* tokens);
+int match_rl(Parser* parser);
+AST* parse_logical_or(Parser* parser, Token* tokens);
+AST* parse_logical_and(Parser* parser, Token* tokens);
+AST* parse_or_bitwise(Parser* parser, Token* tokens);
+AST* parse_xor_bitwise(Parser* parser, Token* tokens);
+AST* parse_and_bitwise(Parser* parser, Token* tokens);
+AST* parse_eq(Parser* parser, Token* tokens);
+AST* parse_rl(Parser* parser, Token* tokens);
+AST* parse_shift(Parser* parser, Token* tokens);
+AST* parse_additive(Parser* parser, Token* tokens);
+AST* parse_multiplicative(Parser* parser, Token* tokens);
+AST* parse_primary(Parser* parser, Token* tokens);
 AST* parse_number(Parser* parser, Token* tokens);
 AST* parse_group(Parser* parser, Token* tokens);
 int is_ident(char ch){
@@ -24,7 +31,7 @@ int is_ident_part(char ch){
   return isalnum(ch) || ch == '_';
 }
 int is_binop(char ch){
-  return ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '<' || ch == '=' || ch == '>';
+  return ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '%' || ch == '<' || ch == '=' || ch == '>';
 }
 void ncopy(Lexer* lexer, const char* source, int start){
   strncpy(lexer->token.value, source + start, lexer->index - start);
@@ -84,6 +91,12 @@ void lexer_step(Lexer* lexer, const char* source){
           lexer->token.type = TOKEN_LT;
         }
         break;
+      case '!':
+        if(lexer->current_char == '='){
+          lexer->token.type = TOKEN_NE;
+          lexer->index++;
+        }
+        break;
       case '=':
         if(lexer->current_char == '='){
           lexer->token.type = TOKEN_EQ;
@@ -114,6 +127,30 @@ void lexer_step(Lexer* lexer, const char* source){
         break;
       case '/':
         lexer->token.type = TOKEN_SLASH;
+        break;
+      case '%':
+        lexer->token.type = TOKEN_MOD;
+        break;
+      case '&':
+        if(lexer->current_char == '&'){
+          lexer->token.type = TOKEN_LOGICAL_AND;
+          lexer->index++;
+        }
+        else{
+          lexer->token.type = TOKEN_AND_BITWISE;
+        }
+        break;
+      case '|':
+        if(lexer->current_char == '|'){
+          lexer->token.type = TOKEN_LOGICAL_OR;
+          lexer->index++;
+        }
+        else{
+          lexer->token.type = TOKEN_OR_BITWISE;
+        }
+        break;
+      case '^':
+        lexer->token.type = TOKEN_XOR_BITWISE;
         break;
     }
     ncopy(lexer, source, start);
@@ -154,10 +191,109 @@ int match(Parser* parser, TokenType type){
   return parser->current_token.type == type;
 }
 int match_comp(Parser* parser){
-  return match(parser, TOKEN_LT) || match(parser, TOKEN_LE) || match(parser, TOKEN_EQ) || match(parser, TOKEN_GE) || match(parser, TOKEN_GT);
+  return match(parser, TOKEN_LT) || match(parser, TOKEN_LE) || match(parser, TOKEN_GE) || match(parser, TOKEN_GT);
 }
-AST* parse_comp(Parser* parser, Token* tokens){
-  AST* left = parse_expr(parser, tokens);
+AST* main_parse(Parser* parser, Token* tokens){
+  return parse_logical_or(parser, tokens);
+}
+AST* parse_logical_or(Parser* parser, Token* tokens){
+  AST* left = parse_logical_and(parser, tokens);
+  if(match(parser, TOKEN_LOGICAL_OR)){
+    AST* ast = malloc(sizeof(AST));
+    if(!ast){
+      fprintf(stderr, "Malloc failed\n");
+      return NULL;
+    }
+    ast->node.type = AST_OR_BITWISE;
+    ast->left = left;
+    ast->right = parse_logical_or(parser, tokens);
+    return ast;
+  }
+  return left;
+}
+AST* parse_logical_and(Parser* parser, Token* tokens){
+  AST* left = parse_or_bitwise(parser, tokens);
+  if(match(parser, TOKEN_LOGICAL_AND)){
+    AST* ast = malloc(sizeof(AST));
+    if(!ast){
+      fprintf(stderr, "Malloc failed\n");
+      return NULL;
+    }
+    ast->node.type = AST_LOGICAL_AND;
+    ast->left = left;
+    ast->right = parse_logical_and(parser, tokens);
+    return ast;
+  }
+  return left;
+}
+AST* parse_or_bitwise(Parser* parser, Token* tokens){
+  AST* left = parse_xor_bitwise(parser, tokens);
+  if(match(parser, TOKEN_OR_BITWISE)){
+    AST* ast = malloc(sizeof(AST));
+    if(!ast){
+      fprintf(stderr, "Malloc failed\n");
+      return NULL;
+    }
+    ast->node.type = AST_OR_BITWISE;
+    ast->left = left;
+    ast->right = parse_or_bitwise(parser, tokens);
+    return ast;
+  }
+  return left;
+}
+AST* parse_xor_bitwise(Parser* parser, Token* tokens){
+  AST* left = parse_and_bitwise(parser, tokens);
+  if(match(parser, TOKEN_XOR_BITWISE)){
+    AST* ast = malloc(sizeof(AST));
+    if(!ast){
+      fprintf(stderr, "Malloc failed\n");
+      return NULL;
+    }
+    ast->node.type = AST_XOR_BITWISE;
+    ast->left = left;
+    ast->right = parse_xor_bitwise(parser, tokens);
+    return ast;
+  }
+  return left;
+}
+AST* parse_and_bitwise(Parser* parser, Token* tokens){
+  AST* left = parse_eq(parser, tokens);
+  if(match(parser, TOKEN_AND_BITWISE)){
+    AST* ast = malloc(sizeof(AST));
+    if(!ast){
+      fprintf(stderr, "Malloc failed\n");
+      return NULL;
+    }
+    ast->node.type = AST_AND_BITWISE;
+    ast->left = left;
+    ast->right = parse_and_bitwise(parser, tokens);
+    return ast;
+  }
+  return left;
+}
+AST* parse_eq(Parser* parser, Token* tokens){
+  AST* left = parse_rl(parser, tokens);
+  if(match(parser, TOKEN_EQ) || match(parser, TOKEN_NE)){
+    AST* ast = malloc(sizeof(AST));
+    if(!ast){
+      fprintf(stderr, "Malloc failed\n");
+      return NULL;
+    }
+    if(match(parser, TOKEN_EQ)){
+      ast->node.type = AST_EQ;
+    }
+    else{
+      ast->node.type = AST_NE;
+    }
+    advance(parser, tokens);
+    ast->left = left;
+    ast->right = parse_eq(parser, tokens);
+    return ast;
+  }
+  return left;
+}
+AST* parse_rl(Parser* parser, Token* tokens){
+  AST* left = parse_shift(parser, tokens);
   if(match_comp(parser)){
     AST* ast = malloc(sizeof(AST));
     if(!ast){
@@ -171,9 +307,6 @@ AST* parse_comp(Parser* parser, Token* tokens){
       case TOKEN_LE:
         ast->node.type = AST_LE;
         break;
-      case TOKEN_EQ:
-        ast->node.type = AST_EQ;
-        break;
       case TOKEN_GE:
         ast->node.type = AST_GE;
         break;
@@ -185,13 +318,33 @@ AST* parse_comp(Parser* parser, Token* tokens){
     }
     advance(parser, tokens);
     ast->left = left;
-    ast->right = parse_comp(parser, tokens);
+    ast->right = parse_rl(parser, tokens);
     return ast;
   }
   return left;
 }
-AST* parse_expr(Parser* parser, Token* tokens){
-  AST* left = parse_term(parser, tokens);
+AST* parse_shift(Parser* parser, Token* tokens){
+  AST* left = parse_additive(parser, tokens);
+  if(match(parser, TOKEN_LSHIFT) || match(parser, TOKEN_RSHIFT)){
+    AST* ast = malloc(sizeof(AST));
+    if(!ast){
+      fprintf(stderr, "Malloc failed\n");
+      return NULL;
+    }
+    if(match(parser, TOKEN_LSHIFT)){
+      ast->node.type = AST_LSHIFT;
+    }
+    else{
+      ast->node.type = AST_RSHIFT;
+    }
+    ast->left = left;
+    ast->right = parse_shift(parser, tokens);
+    return ast;
+  }
+  return left;
+}
+AST* parse_additive(Parser* parser, Token* tokens){
+  AST* left = parse_multiplicative(parser, tokens);
   if(match(parser, TOKEN_PLUS) || match(parser, TOKEN_MINUS)){
     AST* ast = malloc(sizeof(AST));
     if(!ast){
@@ -206,16 +359,16 @@ AST* parse_expr(Parser* parser, Token* tokens){
     }
     advance(parser, tokens);
     ast->left = left;
-    ast->right = parse_expr(parser, tokens);
+    ast->right = parse_additive(parser, tokens);
     return ast;
   }
   else{
     return left;
   }
 }
-AST* parse_term(Parser* parser, Token* tokens){
-  AST* left = parse_factor(parser, tokens);
-  if(match(parser, TOKEN_STAR) || match(parser, TOKEN_SLASH)){
+AST* parse_multiplicative(Parser* parser, Token* tokens){
+  AST* left = parse_primary(parser, tokens);
+  if(match(parser, TOKEN_STAR) || match(parser, TOKEN_SLASH) || match(parser, TOKEN_MOD)){
     AST* ast = malloc(sizeof(AST));
     if(!ast){
       fprintf(stderr, "Malloc failed\n");
@@ -224,19 +377,22 @@ AST* parse_term(Parser* parser, Token* tokens){
     if(match(parser, TOKEN_STAR)){
       ast->node.type = AST_STAR;
     }
-    else{
+    else if(match(parser, TOKEN_SLASH)){
       ast->node.type = AST_SLASH;
+    }
+    else{
+      ast->node.type = AST_MOD;
     }
     advance(parser, tokens);
     ast->left = left;
-    ast->right = parse_term(parser, tokens);
+    ast->right = parse_multiplicative(parser, tokens);
     return ast;
   }
   else{
     return left;
   }
 }
-AST* parse_factor(Parser* parser, Token* tokens){
+AST* parse_primary(Parser* parser, Token* tokens){
   AST* ast = parse_number(parser, tokens);
   if(ast){
     advance(parser, tokens);
@@ -260,7 +416,7 @@ AST* parse_number(Parser* parser, Token* tokens){
 AST* parse_group(Parser* parser, Token* tokens){
   if(match(parser, TOKEN_LPAREN)){
     advance(parser, tokens);
-    AST* ast = parse_comp(parser, tokens);
+    AST* ast = parse_logical_or(parser, tokens);
     if(match(parser, TOKEN_RPAREN)){
       advance(parser, tokens);
       return ast;
@@ -297,16 +453,34 @@ double interpret_ast(AST* ast, int* error_flag){
           return 0;
         }
         return num1 / num2;
+      case AST_MOD:
+        return (int)num1 % (int)num2;
       case AST_LT:
         return num1 < num2;
       case AST_LE:
         return num1 <= num2;
       case AST_EQ:
         return num1 == num2;
+      case AST_NE:
+        return num1 != num2;
       case AST_GE:
         return num1 >= num2;
       case AST_GT:
         return num1 > num2;
+      case AST_LSHIFT:
+        return (int)num1 << (int)num2;
+      case AST_RSHIFT:
+        return (int)num1 >> (int)num2;
+      case AST_AND_BITWISE:
+        return (int)num1 & (int)num2;
+      case AST_OR_BITWISE:
+        return (int)num1 | (int)num2;
+      case AST_XOR_BITWISE:
+        return (int)num1 ^ (int)num2;
+      case AST_LOGICAL_AND:
+        return num1 && num2;
+      case AST_LOGICAL_OR:
+        return num1 || num2;
       default:
         return 0;
     }

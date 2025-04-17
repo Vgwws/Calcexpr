@@ -7,13 +7,20 @@ typedef enum {
   TOKEN_MINUS,
   TOKEN_STAR,
   TOKEN_SLASH,
+  TOKEN_MOD,
   TOKEN_LSHIFT,
   TOKEN_RSHIFT,
   TOKEN_LT,
   TOKEN_LE,
-  TOKEN_EQ,
   TOKEN_GE,
   TOKEN_GT,
+  TOKEN_EQ,
+  TOKEN_NE,
+  TOKEN_AND_BITWISE,
+  TOKEN_OR_BITWISE,
+  TOKEN_XOR_BITWISE,
+  TOKEN_LOGICAL_AND,
+  TOKEN_LOGICAL_OR,
   TOKEN_LPAREN,
   TOKEN_RPAREN,
   TOKEN_EOF
@@ -39,11 +46,20 @@ typedef enum {
   AST_MINUS,
   AST_STAR,
   AST_SLASH,
+  AST_MOD,
   AST_LT,
   AST_LE,
-  AST_EQ,
   AST_GE,
-  AST_GT
+  AST_GT,
+  AST_EQ,
+  AST_NE,
+  AST_LSHIFT,
+  AST_RSHIFT,
+  AST_LOGICAL_AND,
+  AST_LOGICAL_OR,
+  AST_AND_BITWISE,
+  AST_OR_BITWISE,
+  AST_XOR_BITWISE
 } ASTNodeType;
 typedef struct {
   ASTNodeType type;
@@ -57,7 +73,7 @@ typedef struct AST {
 Lexer* create_lexer(const char* source, size_t size);
 Parser* create_parser(Token* tokens);
 void lexer_step(Lexer* lexer, const char* source);
-AST* parse_comp(Parser* parser, Token* tokens);
+AST* main_parse(Parser* parser, Token* tokens);
 double interpret_ast(AST* ast, int* error_flag);
 void clean_tools(Lexer* lexer, Parser* parser, AST* ast);
 #endif
