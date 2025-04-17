@@ -3,6 +3,9 @@
 #include <string.h>
 #include <ctype.h>
 #include "../include/calcexpr.h"
+int is_binop(char ch);
+int is_ident(char ch);
+int is_ident_part(char ch);
 void ncopy(Lexer* lexer, const char* source, int start);
 int binop(Token token);
 void advance(Parser* parser, Token* tokens);
@@ -12,6 +15,15 @@ AST* parse_term(Parser* parser, Token* tokens);
 AST* parse_factor(Parser* parser, Token* tokens);
 AST* parse_number(Parser* parser, Token* tokens);
 AST* parse_group(Parser* parser, Token* tokens);
+int is_ident(char ch){
+  return isalpha(ch) || ch == '_';
+}
+int is_ident_part(char ch){
+  return isalnum(ch) || ch == '_';
+}
+int is_binop(char ch){
+  return ch == '+' || ch == '-' || ch == '*' || ch == '/';
+}
 void ncopy(Lexer* lexer, const char* source, int start){
   strncpy(lexer->token.value, source + start, lexer->index - start);
   lexer->token.value[lexer->index - start] = '\0';
@@ -167,7 +179,7 @@ AST* parse_number(Parser* parser, Token* tokens){
     ast->left = NULL;
     ast->right = NULL;
     ast->node.type = AST_NUMBER;
-    ast->node.value = tokens[parser->index].value;
+    ast->node.value = parser->current_token.value;
     return ast;
   }
   else{
