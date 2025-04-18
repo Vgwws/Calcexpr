@@ -20,7 +20,7 @@ Shift ::= Additive ("<<"|">>") Shift | Additive
 
 Additive ::= Multiplicative ("+"|"-") Additive | Multiplicative
 
-Multiplicative ::= Primary ("*"|"/") Multiplicative | Primary
+Multiplicative ::= Primary ("\*"|"/") Multiplicative | Primary
 
 Primary ::= Number | Group
 
@@ -46,9 +46,20 @@ Build it
 ```sh
 make
 ```
-How to use it?
+## How to use it?
 After installing it, You can execute it
 ```sh
 ./calcexpr
 ```
 If you want to execute it everywhere, you can add the current directory as your PATH or move the binary to one of directory listed in your PATH
+### Example
+```sh
+$ ./calcexpr
+CALCULATOR
+Press `q` to quit program
+Expression: 5 + 5 - 3
+Result: 7.00000
+Expression: 5 + 2 \* 3
+Result: 11.00000
+Expression: q
+```

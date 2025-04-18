@@ -10,7 +10,7 @@ int main(int argc, char** argv){
     tokens[i].value = calloc(SIZE, sizeof(char));
   }
   while(1){
-    printf("Expression: ");
+    printf(">> ");
     char source[SIZE];
     fgets(source, SIZE, stdin);
     if(source[0] == 'q'){
@@ -32,7 +32,7 @@ int main(int argc, char** argv){
     int error_flag = 0;
     double result = interpret_ast(ast, &error_flag);
     if(!error_flag){
-      printf("Result: %lf\n", result);
+      printf("%lf\n", result);
     }
     clean_tools(lexer, parser, ast);
   }
