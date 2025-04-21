@@ -229,6 +229,7 @@ AST* parse_logical_or(Parser* parser, Token* tokens){
       fprintf(stderr, "Malloc failed\n");
       return NULL;
     }
+    advance(parser, tokens);
     ast->node.type = AST_OR_BITWISE;
     ast->left = left;
     ast->right = parse_logical_or(parser, tokens);
@@ -244,6 +245,7 @@ AST* parse_logical_and(Parser* parser, Token* tokens){
       fprintf(stderr, "Malloc failed\n");
       return NULL;
     }
+    advance(parser, tokens);
     ast->node.type = AST_LOGICAL_AND;
     ast->left = left;
     ast->right = parse_logical_and(parser, tokens);
@@ -259,6 +261,7 @@ AST* parse_or_bitwise(Parser* parser, Token* tokens){
       fprintf(stderr, "Malloc failed\n");
       return NULL;
     }
+    advance(parser, tokens);
     ast->node.type = AST_OR_BITWISE;
     ast->left = left;
     ast->right = parse_or_bitwise(parser, tokens);
@@ -274,6 +277,7 @@ AST* parse_xor_bitwise(Parser* parser, Token* tokens){
       fprintf(stderr, "Malloc failed\n");
       return NULL;
     }
+    advance(parser, tokens);
     ast->node.type = AST_XOR_BITWISE;
     ast->left = left;
     ast->right = parse_xor_bitwise(parser, tokens);
@@ -289,6 +293,7 @@ AST* parse_and_bitwise(Parser* parser, Token* tokens){
       fprintf(stderr, "Malloc failed\n");
       return NULL;
     }
+    advance(parser, tokens);
     ast->node.type = AST_AND_BITWISE;
     ast->left = left;
     ast->right = parse_and_bitwise(parser, tokens);
@@ -362,6 +367,7 @@ AST* parse_shift(Parser* parser, Token* tokens){
     else{
       ast->node.type = AST_RSHIFT;
     }
+    advance(parser, tokens);
     ast->left = left;
     ast->right = parse_shift(parser, tokens);
     return ast;
