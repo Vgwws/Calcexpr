@@ -62,9 +62,15 @@ PATH="$PATH:$(pwd)"
 $ ./calcexpr
 CALCULATOR
 Press `q` to quit program
-Expression: 5 + 5 - 3
-Result: 7.00000
-Expression: 5 + 2 \* 3
-Result: 11.00000
-Expression: q
+>> 5 + 5 - 3
+7.000000
+>> 5 + 2 \* 3
+11.000000
+>> 5 & 1
+1.000000
+>> 6 >> 1
+3.000000
+>> 10 * 2 == 50 && 21 * 3 == 0
+0.000000
+>> q
 ```
