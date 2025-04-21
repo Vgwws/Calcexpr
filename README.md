@@ -57,7 +57,7 @@ If you want to execute it everywhere, you can add the current directory as your 
 ```sh
 PATH="$PATH:$(pwd)"
 ```
-### Example
+## Examples
 ```sh
 $ ./calcexpr
 CALCULATOR
