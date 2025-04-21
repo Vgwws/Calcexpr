@@ -16,6 +16,7 @@ typedef enum {
   TOKEN_GT,
   TOKEN_EQ,
   TOKEN_NE,
+  TOKEN_NEGATE,
   TOKEN_AND_BITWISE,
   TOKEN_OR_BITWISE,
   TOKEN_XOR_BITWISE,
@@ -32,6 +33,7 @@ typedef struct {
 typedef struct {
   Token token;
   int index;
+  int pos_char;
   char current_char;
   size_t size;
   int error_flag;
@@ -39,6 +41,7 @@ typedef struct {
 typedef struct {
   int index;
   Token current_token;
+  int error_flag;
 } Parser;
 typedef enum {
   AST_NUMBER,
@@ -53,6 +56,7 @@ typedef enum {
   AST_GT,
   AST_EQ,
   AST_NE,
+  AST_NEGATE,
   AST_LSHIFT,
   AST_RSHIFT,
   AST_LOGICAL_AND,

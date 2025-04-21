@@ -22,11 +22,13 @@ Additive ::= Multiplicative ("+"|"-") Additive | Multiplicative
 
 Multiplicative ::= Primary ("\*"|"/") Multiplicative | Primary
 
-Primary ::= Number | Group
+Primary ::= Number | Group | Negate
 
 Number ::= [0-9]+ ("." [0-9]*)?
 
 Group ::= "(" Logical_OR ")"
+
+Negate ::= "!" Primary
 
 ## How to install it?
 First clone this repository
@@ -52,6 +54,9 @@ After installing it, You can execute it
 ./calcexpr
 ```
 If you want to execute it everywhere, you can add the current directory as your PATH or move the binary to one of directory listed in your PATH
+```sh
+PATH="$PATH:$(pwd)"
+```
 ### Example
 ```sh
 $ ./calcexpr

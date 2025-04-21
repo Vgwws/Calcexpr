@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "../include/calcexpr.h"
 #define SIZE 100
-int main(int argc, char** argv){
+int main(void){
   printf("CALCULATOR\n");
   printf("Press `q` to quit program\n");
   Token* tokens = malloc(SIZE * sizeof(Token));

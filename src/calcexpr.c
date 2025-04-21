@@ -24,6 +24,7 @@ AST* parse_multiplicative(Parser* parser, Token* tokens);
 AST* parse_primary(Parser* parser, Token* tokens);
 AST* parse_number(Parser* parser, Token* tokens);
 AST* parse_group(Parser* parser, Token* tokens);
+AST* parse_negate(Parser* parser, Token* tokens);
 int is_ident(char ch){
   return isalpha(ch) || ch == '_';
 }
@@ -31,7 +32,7 @@ int is_ident_part(char ch){
   return isalnum(ch) || ch == '_';
 }
 int is_binop(char ch){
-  return ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '%' || ch == '<' || ch == '=' || ch == '>';
+  return ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '%' || ch == '<' || ch == '=' || ch == '!' || ch == '>' || ch == '&' || ch == '|' || ch == '^';
 }
 void ncopy(Lexer* lexer, const char* source, int start){
   strncpy(lexer->token.value, source + start, lexer->index - start);
@@ -43,6 +44,7 @@ Lexer* create_lexer(const char* source, size_t size){
   lexer->index = 0;
   lexer->current_char = source[0];
   lexer->size = size;
+  lexer->pos_char = 0;
   return lexer;
 }
 void lexer_step(Lexer* lexer, const char* source){
@@ -55,6 +57,7 @@ void lexer_step(Lexer* lexer, const char* source){
     int start = lexer->index;
     if(lexer->current_char == '-'){
       lexer->current_char = source[++lexer->index];
+      lexer->pos_char++;
     }
     int dot_count = 0;
     while(isdigit(lexer->current_char) || lexer->current_char == '.'){
@@ -63,11 +66,13 @@ void lexer_step(Lexer* lexer, const char* source){
           lexer->error_flag = 1;
           fprintf(stderr, "Invalid floating point format given\n");
           lexer->index++;
+          lexer->pos_char++;
           lexer_step(lexer, source);
           return;
         }
       }
       lexer->current_char = source[++lexer->index];
+      lexer->pos_char++;
     }
     ncopy(lexer, source, start);
     lexer->token.type = TOKEN_NUMBER;
@@ -82,10 +87,12 @@ void lexer_step(Lexer* lexer, const char* source){
         if(lexer->current_char == '<'){
           lexer->token.type = TOKEN_LSHIFT;
           lexer->index++;
+          lexer->pos_char++;
         }
         else if(lexer->current_char == '='){
           lexer->token.type = TOKEN_LE;
           lexer->index++;
+          lexer->pos_char++;
         }
         else{
           lexer->token.type = TOKEN_LT;
@@ -95,22 +102,36 @@ void lexer_step(Lexer* lexer, const char* source){
         if(lexer->current_char == '='){
           lexer->token.type = TOKEN_NE;
           lexer->index++;
+          lexer->pos_char++;
+        }
+        else{
+          lexer->token.type = TOKEN_NEGATE;
         }
         break;
       case '=':
         if(lexer->current_char == '='){
           lexer->token.type = TOKEN_EQ;
           lexer->index++;
+          lexer->pos_char++;
+        }
+        else{
+          lexer->error_flag = 1;
+          fprintf(stderr, "Undeclared operator being used: = at position %d\n", ++lexer->pos_char);
+          lexer->index++;
+          lexer_step(lexer, source);
+          return;
         }
         break;
       case '>':
         if(lexer->current_char == '>'){
           lexer->token.type = TOKEN_RSHIFT;
           lexer->index++;
+          lexer->pos_char++;
         }
         else if(lexer->current_char == '='){
           lexer->token.type = TOKEN_GE;
           lexer->index++;
+          lexer->pos_char++;
         }
         else{
           lexer->token.type = TOKEN_GT;
@@ -135,6 +156,7 @@ void lexer_step(Lexer* lexer, const char* source){
         if(lexer->current_char == '&'){
           lexer->token.type = TOKEN_LOGICAL_AND;
           lexer->index++;
+          lexer->pos_char++;
         }
         else{
           lexer->token.type = TOKEN_AND_BITWISE;
@@ -144,6 +166,7 @@ void lexer_step(Lexer* lexer, const char* source){
         if(lexer->current_char == '|'){
           lexer->token.type = TOKEN_LOGICAL_OR;
           lexer->index++;
+          lexer->pos_char++;
         }
         else{
           lexer->token.type = TOKEN_OR_BITWISE;
@@ -154,6 +177,7 @@ void lexer_step(Lexer* lexer, const char* source){
         break;
     }
     ncopy(lexer, source, start);
+    lexer->pos_char++;
     return;
   }
   switch(lexer->current_char){
@@ -168,7 +192,7 @@ void lexer_step(Lexer* lexer, const char* source){
       break;
     default:
       lexer->error_flag = 1;
-      fprintf(stderr, "Undeclared operator being used: %c\n", lexer->current_char);
+      fprintf(stderr, "Undeclared operator being used: %c at position %d\n", lexer->current_char, ++lexer->pos_char);
       lexer->index++;
       lexer_step(lexer, source);
       return;
@@ -176,6 +200,7 @@ void lexer_step(Lexer* lexer, const char* source){
   lexer->token.value[0] = lexer->current_char;
   lexer->token.value[1] = '\0';
   lexer->index++;
+  lexer->pos_char++;
   return;
 }
 void advance(Parser* parser, Token* tokens){
@@ -395,10 +420,13 @@ AST* parse_multiplicative(Parser* parser, Token* tokens){
 AST* parse_primary(Parser* parser, Token* tokens){
   AST* ast = parse_number(parser, tokens);
   if(ast){
-    advance(parser, tokens);
     return ast;
   }
-  return parse_group(parser, tokens);
+  ast = parse_group(parser, tokens);
+  if(ast){
+    return ast;
+  }
+  return parse_negate(parser, tokens);
 }
 AST* parse_number(Parser* parser, Token* tokens){
   if(match(parser, TOKEN_NUMBER)){
@@ -407,6 +435,7 @@ AST* parse_number(Parser* parser, Token* tokens){
     ast->right = NULL;
     ast->node.type = AST_NUMBER;
     ast->node.value = parser->current_token.value;
+    advance(parser, tokens);
     return ast;
   }
   else{
@@ -429,15 +458,33 @@ AST* parse_group(Parser* parser, Token* tokens){
   }
   return NULL;
 }
+AST* parse_negate(Parser* parser, Token* tokens){
+  if(match(parser, TOKEN_NEGATE)){
+    advance(parser, tokens);
+    AST* ast = malloc(sizeof(AST));
+    ast->node.type = AST_NEGATE;
+    ast->left = parse_primary(parser, tokens);
+    advance(parser, tokens);
+    return ast;
+  }
+  return NULL;
+}
 double interpret_ast(AST* ast, int* error_flag){
-  if(*error_flag){
+  if(!ast){
+    *error_flag = 1;
     return 0;
   }
-  if(ast->node.type == AST_NUMBER){
+  else if(*error_flag){
+    return 0;
+  }
+  else if(ast->node.type == AST_NUMBER){
     return atof(ast->node.value);
   }
   else{
     double num1 = interpret_ast(ast->left, error_flag);
+    if(ast->node.type == AST_NEGATE){
+      return !num1;
+    }
     double num2 = interpret_ast(ast->right, error_flag);
     switch(ast->node.type){
       case AST_PLUS:
