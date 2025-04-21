@@ -464,7 +464,6 @@ AST* parse_negate(Parser* parser, Token* tokens){
     AST* ast = malloc(sizeof(AST));
     ast->node.type = AST_NEGATE;
     ast->left = parse_primary(parser, tokens);
-    advance(parser, tokens);
     return ast;
   }
   return NULL;
